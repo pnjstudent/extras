@@ -1,5 +1,5 @@
 {
-    "name": "SimpleMovingAverage",
+    "name": "algos",
     "description": "",
     "dependencies": {
         "core": "*",
