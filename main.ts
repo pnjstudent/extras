@@ -32,26 +32,41 @@ namespace extras {
             [array[i], array[j]] = [array[j], array[i]];
         }
     }
+}
 
+//% color="#c938c7" icon="\uf130"
+namespace sound {
     let maxVol = 0;
+    const getAmplifiedVol = () => input.soundLevel() / maxVol * 255;
 
-    //% group="Sound"
     //% block="map $imgs to the sound level"
     //% imgs.shadow="lists_create_with"
     export function mapImagesToVolume(imgs: Image[]) {
         maxVol = Math.max(maxVol, input.soundLevel());
-        const getAmplifiedVol = () => input.soundLevel() / maxVol * 255;
-        const step = 255 / imgs.length;
-        imgs.length && imgs[Math.clamp(0, imgs.length - 1, Math.round(getAmplifiedVol() / step))].showImage(0);
+        const step = maxVol / imgs.length;
+        let index = 0;
+        if (imgs.length) {
+            index = Math.clamp(0, imgs.length - 1,
+                Math.floor(input.soundLevel() / step));
+        }
+        imgs[index].showImage(0, 5);
     }
 
     /**
      * Reset Max Volume Level Detected
      */
-    //% group="Sound"
     //% block="reset max volume detected"
     export function resetMaxVol() {
         maxVol = 0;
+    }
+
+    /**
+     * Amplifies the max volume recorded to 255
+     */
+    //% block="amplified sound level"
+    export function getAmplifiedSoundLevel(): number {
+        maxVol = Math.max(maxVol, input.soundLevel());
+        return getAmplifiedVol();
     }
 }
 
