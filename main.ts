@@ -65,9 +65,8 @@ namespace sound {
         const soundLevel = input.soundLevel();
         updateMaxVol(soundLevel)
         const step = maxVol / imgs.length;
-        let index = 0;
         if (imgs.length) {
-            index = Math.clamp(0, imgs.length - 1,
+            const index = Math.clamp(0, imgs.length - 1,
                 Math.floor(soundLevel / step));
             imgs[index].showImage(0, 5);
         }
