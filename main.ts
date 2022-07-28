@@ -1,26 +1,6 @@
 //% color="#2b2c6e" icon="\uf067"
 namespace extras {
     /**
-     * Simple moving average
-     */
-    //% group="Filters"
-    //% block="smoothen value $input with $points points"
-    export function smoothenValue(input: number, points: number): number {
-        const values: number[] = [];
-        const avg = () => values.reduce((prev: number, curr: number) => prev + curr, 0) / points;
-        if (values.length == 0) {
-            values.push(input);
-            return input;
-        } else if (values.length < points) {
-            values.push(input);
-            return avg();
-        } else {
-            values.shift();
-            values.push(input);
-            return avg();
-        }
-    }
-    /**
      * Shuffles arrays
      */
     //% group="Arrays"
@@ -32,24 +12,65 @@ namespace extras {
             [array[i], array[j]] = [array[j], array[i]];
         }
     }
+
+    //% group="Filters"
+    //% block="create smoother"
+    //% blockSetVariable="smoothOutput"
+    export function createSmoother(): MovingAverageSmoother {
+        return new MovingAverageSmoother();
+    }
+}
+
+//% blockNamespace=extras
+class MovingAverageSmoother {
+    private values: number[];
+
+    constructor() {
+        this.values = [];
+    }
+
+    private avg(points: number): number {
+        return this.values.reduce((prevSum, n) => prevSum + n, 0) / points;
+    }
+
+    //% block="get output of %extras(smoothOutput) of value $input with $points points"
+    getOutput(input: number, points: number): number {
+        if (this.values.length == 0) {
+            this.values.push(input);
+            return input;
+        } else if (this.values.length < points) {
+            this.values.push(input);
+            return this.avg(points);
+        } else {
+            this.values.shift();
+            this.values.push(input);
+            return this.avg(points);
+        }
+    }
 }
 
 //% color="#c938c7" icon="\uf130"
 namespace sound {
     let maxVol = 0;
-    const getAmplifiedVol = () => input.soundLevel() / maxVol * 255;
+    const getAmplifiedVol = (soundLevel: number) => input.soundLevel() / maxVol * 255;
 
-    //% block="map $imgs to the sound level"
+    function updateMaxVol(soundLevel: number) {
+        maxVol = Math.max(maxVol, soundLevel);
+    }
+
+    //% block="map LEDs $imgs to the sound level"
     //% imgs.shadow="lists_create_with"
+    //% imgs.defl=device_build_image
     export function mapImagesToVolume(imgs: Image[]) {
-        maxVol = Math.max(maxVol, input.soundLevel());
+        const soundLevel = input.soundLevel();
+        updateMaxVol(soundLevel)
         const step = maxVol / imgs.length;
         let index = 0;
         if (imgs.length) {
             index = Math.clamp(0, imgs.length - 1,
-                Math.floor(input.soundLevel() / step));
+                Math.floor(soundLevel / step));
+            imgs[index].showImage(0, 5);
         }
-        imgs[index].showImage(0, 5);
     }
 
     /**
@@ -65,8 +86,9 @@ namespace sound {
      */
     //% block="amplified sound level"
     export function getAmplifiedSoundLevel(): number {
-        maxVol = Math.max(maxVol, input.soundLevel());
-        return getAmplifiedVol();
+        const soundLevel = input.soundLevel();
+        updateMaxVol(soundLevel)
+        return getAmplifiedVol(soundLevel);
     }
 }
 
