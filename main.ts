@@ -13,11 +13,66 @@ namespace extras {
         }
     }
 
+    //% block="show string $s with interval $interval"
+    //% color="#2a8ff7"
+    //% group="Strings"
+    export function showString(s: string, interval: number) {
+        basic.showString(s, interval);
+    }
+
     //% group="Filters"
     //% block="create smoother"
     //% blockSetVariable="smoothOutput"
+    //% weight=100
     export function createSmoother(): MovingAverageSmoother {
         return new MovingAverageSmoother();
+    }
+
+    //% group="ImageMap"
+    //% block="create image map with images $imgs"
+    //% blockSetVariable="imageMap"
+    //% imgs.shadow="lists_create_with"
+    //% weight=100
+    export function createImgMap(imgs: Image[]): ImageMap {
+        return new ImageMap(imgs);
+    }
+}
+
+//% blockNamespace=extras
+class ImageMap {
+    private imgs: Image[];
+    private maxVal: number;
+
+    constructor(imgs: Image[]) {
+        this.imgs = imgs;
+    }
+
+    //% block="amplify value with %extras(imageMap) value $input || with max value %max"
+    //% group="ImageMap"
+    getAmplifiedVal(input: number, max = 255) {
+        return input / this.maxVal * max;
+    }
+
+    private updateMaxVal(input: number) {
+        this.maxVal = Math.max(this.maxVal, input);
+    }
+
+    //% block="change images of %extras(imgeMap) to $imgs"
+    //% group="ImageMap"
+    changeImgs(imgs: Image[]) {
+        this.imgs = imgs;
+    }
+
+    //% block="map images of %extras(imageMap) to $input"
+    //% group="ImageMap"
+    mapImgs(input: number) {
+        this.updateMaxVal(input);
+        const step = this.maxVal / this.imgs.length;
+        if (this.imgs.length) {
+            const index = Math.clamp(0, this.imgs.length - 1,
+                Math.floor(input / step));
+            this.imgs[index].showImage(0, 5);
+        }
     }
 }
 
@@ -34,6 +89,8 @@ class MovingAverageSmoother {
     }
 
     //% block="get output of %extras(smoothOutput) of value $input with $points points"
+    //% group="Filters"
+    //% weight=50
     getOutput(input: number, points: number): number {
         if (this.values.length == 0) {
             this.values.push(input);
@@ -49,10 +106,10 @@ class MovingAverageSmoother {
     }
 }
 
-//% color="#c938c7" icon="\uf130"
+//% color="#72a875" icon="\uf130"
 namespace sound {
     let maxVol = 0;
-    const getAmplifiedVol = (soundLevel: number) => input.soundLevel() / maxVol * 255;
+    const getAmplifiedVol = (soundLevel: number) => soundLevel / maxVol * 255;
 
     function updateMaxVol(soundLevel: number) {
         maxVol = Math.max(maxVol, soundLevel);
@@ -91,3 +148,12 @@ namespace sound {
     }
 }
 
+//% blockNamespace="compass" icon="\uf14e"
+//% color="#eb9710"
+namespace compass {
+
+    //% block="show compass arrow"
+    export function showCompassArrow() {
+        basic.showArrow(Math.round(input.compassHeading() / 45) % 8);
+    }
+}
